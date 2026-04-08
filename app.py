@@ -13,15 +13,10 @@ from sklearn.preprocessing import MinMaxScaler
 # CONFIGURATION — edit these paths if needed
 # ══════════════════════════════════════════════════════════════════════════════
 
-# Path to your trained GRU model weights file
-MODEL_PATH ="GRU_model.pth"
-
-# Folder containing your weather CSV files
-DATA_FOLDER ="weather_data"
-
-# Forecast settings
-LOOKBACK = 30   # days of history fed into the model (must match training)
-HORIZON  = 7    # days to forecast
+MODEL_PATH  = "GRU_model.pth"
+DATA_FOLDER = "weather_data"
+LOOKBACK    = 30
+HORIZON     = 7
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -50,13 +45,10 @@ def get_season(month: int):
 
 @st.cache_data(show_spinner=False)
 def load_weather_data(days: int = 60):
-    """Load and merge all CSV files from the weather_data folder."""
     files = sorted(glob.glob(f"{DATA_FOLDER}/*.csv"))
-
     if not files:
-        st.error(f"No CSV files found in `{DATA_FOLDER}/`. Make sure the folder exists and contains your CSV files.")
+        st.error(f"No CSV files found in `{DATA_FOLDER}/`.")
         return None
-
     try:
         df = pd.concat([pd.read_csv(f) for f in files], ignore_index=True)
         df = df[["datetime", "temp", "humidity", "precip", "windspeed", "conditions"]].copy()
@@ -65,7 +57,7 @@ def load_weather_data(days: int = 60):
         df = df.dropna(subset=["temp"]).set_index("datetime").sort_index()
         return df.tail(days)
     except KeyError as e:
-        st.error(f"Missing column in CSV: {e}. Required columns: datetime, temp, humidity, precip, windspeed, conditions")
+        st.error(f"Missing column in CSV: {e}.")
         return None
     except Exception as e:
         st.error(f"Error loading data: {e}")
@@ -91,9 +83,8 @@ class GRUModel(nn.Module):
 
 @st.cache_resource
 def load_model():
-    """Load the trained GRU model from disk."""
     if not os.path.exists(MODEL_PATH):
-        st.error(f"Model file not found: `{MODEL_PATH}`. Place your GRU_model.pth in the same folder as this script.")
+        st.error(f"Model file not found: `{MODEL_PATH}`.")
         return None
     model = GRUModel()
     model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
@@ -102,7 +93,6 @@ def load_model():
 
 
 def run_forecast(model, recent_temps: np.ndarray) -> np.ndarray:
-    """Scale recent temps → run GRU → inverse-scale → return °F predictions."""
     scaler = MinMaxScaler()
     scaler.fit(recent_temps.reshape(-1, 1))
     scaled = scaler.transform(recent_temps.reshape(-1, 1))
@@ -128,45 +118,45 @@ def get_recommendations(temps_c: list, month: int) -> list:
 
     if mx >= 36:
         recs.append({"icon": "🥵", "title": "Extreme Heat Alert",
-            "body": f"Peak forecast reaches {mx}°C. Avoid outdoor exertion between 11am–4pm. Keep water handy.",
+            "body": f"Peak forecast reaches {mx}°C. Avoid outdoor exertion 11am–4pm.",
             "colour": "#FF4B4B"})
     elif mx >= 33:
         recs.append({"icon": "🌡️", "title": "High Temperature Advisory",
-            "body": f"Temperatures up to {mx}°C expected. Stay hydrated and limit prolonged sun exposure.",
+            "body": f"Temperatures up to {mx}°C expected. Stay hydrated.",
             "colour": "#FF8C00"})
 
     if avg <= 26:
         recs.append({"icon": "😌", "title": "Pleasant Weather Window",
-            "body": f"Average of {avg:.1f}°C — great conditions for outdoor activities and farming.",
+            "body": f"Average of {avg:.1f}°C — great for outdoor activities.",
             "colour": "#00A86B"})
 
     if season in ("Peak Wet Season", "Late Rains", "Early Rains"):
         recs.append({"icon": "☔", "title": "Rainy Season Tip",
-            "body": "Carry an umbrella daily. Roads around Ake and Kemta may flood after heavy showers.",
+            "body": "Carry an umbrella. Roads near Ake/Kemta may flood.",
             "colour": "#1E90FF"})
         recs.append({"icon": "🌾", "title": "Farming Advisory",
-            "body": "Good conditions for planting cassava, maize, and yam. Watch for waterlogging.",
+            "body": "Good for planting cassava, maize, and yam. Watch for waterlogging.",
             "colour": "#228B22"})
 
     if season in ("Dry / Harmattan", "Dry Season"):
         recs.append({"icon": "🌬️", "title": "Harmattan Precaution",
-            "body": "Dry, dusty winds expected. Use a face mask outdoors and apply moisturiser.",
+            "body": "Dry, dusty winds expected. Use a face mask outdoors.",
             "colour": "#D2691E"})
         recs.append({"icon": "💧", "title": "Stay Hydrated",
-            "body": "Low humidity increases dehydration risk. Drink at least 2–3 litres of water daily.",
+            "body": "Drink at least 2–3 litres of water daily.",
             "colour": "#1E90FF"})
 
     if avg >= 30:
         recs.append({"icon": "🏥", "title": "Health Reminder",
-            "body": "Heat stress can aggravate hypertension and asthma. Elderly and children should stay cool.",
+            "body": "Heat stress can aggravate hypertension. Keep elderly and children cool.",
             "colour": "#9B59B6"})
 
     recs.append({"icon": "⚡", "title": "Energy Tip",
-        "body": "Charge devices and stock generator fuel early in the day before peak heat hours.",
+        "body": "Charge devices early in the day before peak heat hours.",
         "colour": "#F4C542"})
 
     recs.append({"icon": "🚗", "title": "Travel Planning",
-        "body": "Best travel windows: early morning (6–9am) and evening (5–7pm) to avoid peak heat.",
+        "body": "Best travel: 6–9am and 5–7pm to avoid peak heat.",
         "colour": "#17A589"})
 
     return recs
@@ -176,16 +166,24 @@ def get_recommendations(temps_c: list, month: int) -> list:
 # PAGE SETUP
 # ══════════════════════════════════════════════════════════════════════════════
 
-st.set_page_config(page_title="Abeokuta 7-Day Forecast", page_icon="🌤️", layout="wide")
+st.set_page_config(page_title="Abeokuta 7-Day Forecast", page_icon="🌤️", layout="centered")
 
 st.markdown("""
 <style>
-    .main-title { font-size: 2.2rem; font-weight: 800; color: #1E3A5F; }
-    .subtitle   { font-size: 1rem; color: #555; margin-top: -10px; }
-    .sec-hdr    { font-size: 1.2rem; font-weight: 700; color: #1E3A5F; margin: 16px 0 8px; }
-    .rec-card   { border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; border-left: 5px solid; }
-    .rec-title  { font-weight: 700; font-size: 1rem; }
-    .rec-body   { font-size: 0.88rem; margin-top: 4px; color: #333; }
+    /* Constrain the main content block */
+    .block-container {
+        max-width: 860px !important;
+        padding-top: 1.5rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 2rem !important;
+        padding-right: 2rem !important;
+    }
+    .main-title { font-size: 1.7rem; font-weight: 800; color: #1E3A5F; }
+    .subtitle   { font-size: 0.9rem; color: #555; margin-top: -8px; }
+    .sec-hdr    { font-size: 1.05rem; font-weight: 700; color: #1E3A5F; margin: 14px 0 6px; }
+    .rec-card   { border-radius: 10px; padding: 10px 14px; margin-bottom: 8px; border-left: 5px solid; }
+    .rec-title  { font-weight: 700; font-size: 0.9rem; }
+    .rec-body   { font-size: 0.82rem; margin-top: 3px; color: #333; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -201,23 +199,22 @@ with col1:
     st.markdown('<div class="subtitle">Abeokuta, Ogun State, Nigeria</div>', unsafe_allow_html=True)
 with col2:
     st.markdown(
-        f"<br><div style='text-align:right; color:#777; font-size:0.85rem;'>"
+        f"<br><div style='text-align:right; color:#777; font-size:0.8rem;'>"
         f"Updated: {datetime.now().strftime('%d %b %Y, %H:%M')}</div>",
         unsafe_allow_html=True)
 
 st.divider()
 
-# Load model
+# Load model & data
 model = load_model()
 if model is None:
     st.stop()
 
-# Load data
 with st.spinner("Loading weather data…"):
     weather_df = load_weather_data(days=60)
 
 if weather_df is None or len(weather_df) < LOOKBACK:
-    st.error(f"Need at least {LOOKBACK} days of data to run the forecast. Check your CSV files.")
+    st.error(f"Need at least {LOOKBACK} days of data. Check your CSV files.")
     st.stop()
 
 # Run forecast
@@ -234,7 +231,7 @@ season_name, season_icon = get_season(today.month)
 # Current conditions
 last = weather_df.iloc[-1]
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("🌡️ Last Observed Temp", f"{f_to_c(last['temp'])}°C", f"{last['temp']:.1f}°F")
+c1.metric("🌡️ Last Temp",   f"{f_to_c(last['temp'])}°C", f"{last['temp']:.1f}°F")
 c2.metric("💧 Humidity",    f"{last.get('humidity', 'N/A')}%")
 c3.metric("🌬️ Wind Speed",  f"{last.get('windspeed', 'N/A')} km/h")
 c4.metric(f"{season_icon} Season", season_name)
@@ -249,11 +246,11 @@ for i, col in enumerate(cols):
     bg, border = ("#FFF0F0","#FF4B4B") if t>=36 else ("#FFF8EC","#FF8C00") if t>=33 else ("#F0FFF4","#00A86B") if t<=26 else ("#F0F4FA","#2C7BE5")
     col.markdown(f"""
         <div style='background:{bg}; border-top:4px solid {border};
-                    border-radius:12px; padding:14px 8px; text-align:center;'>
-            <div style='font-size:0.78rem; color:#666;'>{date_strs[i]}</div>
-            <div style='font-weight:700; font-size:0.95rem; color:#1E3A5F; margin:2px 0;'>{day_names[i][:3]}</div>
-            <div style='font-size:1.9rem; font-weight:800; color:#1E3A5F;'>{t}°C</div>
-            <div style='font-size:0.76rem; color:#888;'>{preds_f[i]:.1f}°F</div>
+                    border-radius:10px; padding:10px 4px; text-align:center;'>
+            <div style='font-size:0.72rem; color:#666;'>{date_strs[i]}</div>
+            <div style='font-weight:700; font-size:0.85rem; color:#1E3A5F; margin:2px 0;'>{day_names[i][:3]}</div>
+            <div style='font-size:1.5rem; font-weight:800; color:#1E3A5F;'>{t}°C</div>
+            <div style='font-size:0.7rem; color:#888;'>{preds_f[i]:.1f}°F</div>
         </div>""", unsafe_allow_html=True)
 
 st.markdown("<br>", unsafe_allow_html=True)
@@ -262,14 +259,14 @@ st.markdown("<br>", unsafe_allow_html=True)
 st.markdown('<div class="sec-hdr">📈 Temperature Trend</div>', unsafe_allow_html=True)
 chart_df = pd.DataFrame({"Temperature (°C)": preds_c},
                          index=[d.strftime("%a %d %b") for d in fc_dates])
-st.line_chart(chart_df, use_container_width=True, height=260)
+st.line_chart(chart_df, use_container_width=True, height=220)
 
 # Historical context
 with st.expander("🗓️ Last 30 days history"):
     hist_df = weather_df[["temp"]].tail(30).copy()
     hist_df["Temp (°C)"] = hist_df["temp"].apply(f_to_c)
     hist_df.index = hist_df.index.strftime("%d %b")
-    st.line_chart(hist_df[["Temp (°C)"]], use_container_width=True, height=200)
+    st.line_chart(hist_df[["Temp (°C)"]], use_container_width=True, height=180)
 
 st.divider()
 
@@ -297,4 +294,3 @@ with st.expander("📋 Full forecast table"):
         "Feels Like": ["Hot" if t >= 33 else "Warm" if t >= 28 else "Pleasant" for t in preds_c],
     })
     st.dataframe(tbl, use_container_width=True, hide_index=True)
-
