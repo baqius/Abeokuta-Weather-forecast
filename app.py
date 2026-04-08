@@ -14,10 +14,10 @@ from sklearn.preprocessing import MinMaxScaler
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Path to your trained GRU model weights file
-MODEL_PATH ="C:/Users/USER/Documents/WORLD QUANT PROJECT/Fundamental deep learning/Chapter 8 LSTM/GRU_model.pth"
+MODEL_PATH ="GRU_model.pth"
 
 # Folder containing your weather CSV files
-DATA_FOLDER ="C:/Users/USER/Documents/WORLD QUANT PROJECT/Fundamental deep learning/Chapter 8 LSTM/weather_data"
+DATA_FOLDER ="weather_data"
 
 # Forecast settings
 LOOKBACK = 30   # days of history fed into the model (must match training)
