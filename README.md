@@ -2,7 +2,6 @@
 ### Multi-Step Temperature Forecasting with GRU (PyTorch) + Streamlit Dashboard
 
 ---
-
 ## Overview
 
 This project builds and deploys a deep learning model that forecasts the **next 7 days of daily temperature** for **Abeokuta, Ogun State, Nigeria**, using 9 years of historical weather data (2017–2026).
