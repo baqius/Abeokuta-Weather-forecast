@@ -195,12 +195,18 @@ st.markdown("""
 # Header
 col1, col2 = st.columns([3, 1])
 with col1:
-    st.markdown('<div class="main-title">🌤️ Abeokuta 7-Day Weather Forecast</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle">Abeokuta, Ogun State, Nigeria</div>', unsafe_allow_html=True)
+    st.markdown(
+        "<p style='font-size:1.9rem; font-weight:800; color:#1E3A5F; margin-top:30px; margin-bottom:0; padding:0;'>"
+        "🌤️ Abeokuta 7-Day Weather Forecast</p>",
+        unsafe_allow_html=True)
+    st.markdown(
+        "<p style='font-size:0.9rem; color:#555; margin:0; padding:0;'>"
+        "Abeokuta, Ogun State, Nigeria</p>",
+        unsafe_allow_html=True)
 with col2:
     st.markdown(
-        f"<br><div style='text-align:right; color:#777; font-size:0.8rem;'>"
-        f"Updated: {datetime.now().strftime('%d %b %Y, %H:%M')}</div>",
+        f"<p style='text-align:right; color:#777; font-size:0.8rem; margin-top:40px;'>"
+        f"Updated: {datetime.now().strftime('%d %b %Y, %H:%M')}</p>",
         unsafe_allow_html=True)
 
 st.divider()
